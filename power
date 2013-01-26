@@ -1,0 +1,76 @@
+#!/usr/bin/expect
+
+# Set or verify the next three items
+set username "admin"
+set address "IP Address or Hostname"
+set password "Password"
+
+set timeout 5
+set targetState [lindex $argv 0]
+log_user 0 # Comment line to see debugging
+
+if { [llength $argv] == 0 } {
+	send_user "Usage: power up|down|check\n"
+	exit 1
+}
+
+if { $targetState != "up" && $targetState != "down" && $targetState != "check" } {
+       send_user "Usage: power up|down|check\n"
+       exit 1
+}
+
+if { $targetState  == "up" } {
+	set powerState 1111
+	send_user "\nPowering up!\n"
+} 
+if { $targetState == "down" } {
+	set powerState 0000
+	send_user "\nPowering down!\n"
+}
+
+spawn telnet "$address"
+
+expect {
+	timeout { send_user "\n***Command timed out waiting for initial prompt\n; exit 1 }
+	"9258Telnet->" 
+}
+
+send "$username:$password\r"
+
+expect {
+	timeout { send_user "\n***Command timed out after sending username and password\n; exit 1 }
+	"Username and password is ok!"
+}
+
+# If the user has chosen to check the power state this section is executed
+if { $targetState == "check" } {
+	send "getpower\r"
+	expect {
+		timeout { send_user "\n***Command timed out after sending getpower\n"; exit 1 }
+		default { send_user "\nIt's a mess!\n" } # I don't feel like parsing all the possible combinations and mostly will only deal with all up or down
+		"Power Status : 0 0 0 0 " { send_user "\nEverything is powered off!\n" }
+		"Power Status : 1 1 1 1 " { send_user "\nEverything is powered on!\n" }
+	}
+} else { send "setpower p6=$powerState\r" }
+
+# If the user has chosen to power up the ports this section will execute
+if { $targetState == "up" } {
+	expect {
+		timeout { send_user "\n***Command timed out after sending power on command\n; exit 1 }
+		"Power Status : 1 1 1 1 "
+	}
+	send_user "\nEverything was powered up!\n"
+}
+
+# If the user has chosen to power down the ports this section will execute
+if { $targetState == "down" } {
+	expect {
+		timeout { send_user "\n***Command timed out after sending power on command\n; exit 1 }
+		"Power Status : 0 0 0 0 "
+	}
+	send_user "\nEverything was powered down!\n"
+}
+
+send "exit\r"
+
+close
