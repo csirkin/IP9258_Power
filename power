@@ -53,9 +53,10 @@ if { $targetState == "check" } {
 	send "getpower\r"
 	expect {
 		timeout { send_user "\n***Command timed out after sending getpower\n"; exit 1 }
-		default { send_user "\nIt's a mess!\n" } # I don't feel like parsing all the possible combinations and mostly will only deal with all up or down
+		default { send_user "\nIt's a mess!\n" } # I don't feel like parsing all the possible combinations
 		"Power Status : 0 0 0 0 " { send_user "\nEverything is powered off!\n" }
 		"Power Status : 1 1 1 1 " { send_user "\nEverything is powered on!\n" }
+		"Power Status : 1 0 1 1 " { send_user "\nWe've rounded up the usual suspects!\n" }
 	}
 } else { send "setpower p6=$powerState\r" }
 
