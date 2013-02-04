@@ -2,30 +2,36 @@
 
 # Set or verify the next three items
 set username "admin"
-set address "IP Address or Hostname"
-set password "Password"
+set address "192.168.1.3"
+set password "*RrodU9$"
 
 set timeout 5
 set targetState [lindex $argv 0]
 log_user 0 # Comment line to see debugging
 
 if { [llength $argv] == 0 } {
-	send_user "Usage: power up|down|check\n"
+	send_user "Usage: power up|down|check|usual\n"
 	exit 1
 }
 
-if { $targetState != "up" && $targetState != "down" && $targetState != "check" } {
-       send_user "Usage: power up|down|check\n"
+if { $targetState != "up" && $targetState != "down" && $targetState != "check" && $targetState != "usual" } {
+       send_user "Usage: power up|down|check|usual\n"
        exit 1
 }
 
 if { $targetState  == "up" } {
 	set powerState 1111
 	send_user "\nPowering up!\n"
-} 
+}
+ 
 if { $targetState == "down" } {
 	set powerState 0000
 	send_user "\nPowering down!\n"
+}
+
+if { $targetState == "usual" } {
+	set powerState 1011
+	send_user "\nRounding up the usual suspects!\n"
 }
 
 spawn telnet "$address"
@@ -69,6 +75,15 @@ if { $targetState == "down" } {
 		"Power Status : 0 0 0 0 "
 	}
 	send_user "\nEverything was powered down!\n"
+}
+
+# If the user has chosen to power up the usual ports this section will execute
+if { $targetState == "usual" } {
+	expect {
+		timeout { send_user "\n***Command timed out after sending power on command\n; exit 1 }
+		"Power Status : 1 0 1 1 "
+	}
+	send_user "\nWe've rounded up the usual suspects!\n"
 }
 
 send "exit\r"
