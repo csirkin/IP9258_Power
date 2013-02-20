@@ -1,1 +1,2 @@
-Add an option for the user to enter any acceptable power state from the command line.
+Add status parsing on sending a custom power state request to properly verify that it was received correctly
+Done - Add an option for the user to enter any acceptable power state from the command line.
