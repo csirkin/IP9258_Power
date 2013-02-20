@@ -2,19 +2,27 @@
 
 # Set or verify the next three items
 set username "admin"
-set address "192.168.1.3"
+set address ""
 set password ""
 
 set timeout 5
 set targetState [lindex $argv 0]
+set correctCustom 0
 log_user 0 # Comment line to see debugging
 
 if { [llength $argv] == 0 } {
-	send_user "Usage: power up|down|check|usual\n"
+	send_user "Usage: power up|down|check|usual|xxxx\n"
 	exit 1
 }
 
-if { $targetState != "up" && $targetState != "down" && $targetState != "check" && $targetState != "usual" } {
+if {[regexp {[0-1][0-1][0-1][0-1]} $targetState]} {
+#	send_user $dev1\n
+#	set requestedState [concat $dev1 ' ' $dev2 " " $dev3 " " $dev4]
+#	send_user $requestedState\n
+	set correctCustom 1
+}
+
+if { $targetState != "up" && $targetState != "down" && $targetState != "check" && $targetState != "usual" && $correctCustom != 1 } {
        send_user "Usage: power up|down|check|usual\n"
        exit 1
 }
@@ -32,6 +40,11 @@ if { $targetState == "down" } {
 if { $targetState == "usual" } {
 	set powerState 1011
 	send_user "\nRounding up the usual suspects!\n"
+}
+
+if { $correctCustom == 1 } {
+	set powerState $targetState
+	send_user "\nAs you wish...\n"
 }
 
 spawn telnet "$address"
@@ -63,7 +76,7 @@ if { $targetState == "check" } {
 # If the user has chosen to power up the ports this section will execute
 if { $targetState == "up" } {
 	expect {
-		timeout { send_user "\n***Command timed out after sending power on command\n; exit 1 }
+		timeout { send_user "\n***Command timed out after sending power on command\n"; exit 1 }
 		"Power Status : 1 1 1 1 "
 	}
 	send_user "\nEverything was powered up!\n"
@@ -72,7 +85,7 @@ if { $targetState == "up" } {
 # If the user has chosen to power down the ports this section will execute
 if { $targetState == "down" } {
 	expect {
-		timeout { send_user "\n***Command timed out after sending power on command\n; exit 1 }
+		timeout { send_user "\n***Command timed out after sending power all off command\n"; exit 1 }
 		"Power Status : 0 0 0 0 "
 	}
 	send_user "\nEverything was powered down!\n"
@@ -81,10 +94,19 @@ if { $targetState == "down" } {
 # If the user has chosen to power up the usual ports this section will execute
 if { $targetState == "usual" } {
 	expect {
-		timeout { send_user "\n***Command timed out after sending power on command\n; exit 1 }
+		timeout { send_user "\n***Command timed out after sending 'usual' power on command\n"; exit 1 }
 		"Power Status : 1 0 1 1 "
 	}
 	send_user "\nWe've rounded up the usual suspects!\n"
+}
+
+# If the user has chosen to enter a custom state we'll assume it worked for now
+if { $correctCustom == 1 } {
+	expect {
+		timeout { send_user "\n***Command timed out after sending custom power on command\n"; exit 1 }
+		"Power Status :"
+	}
+	send_user "\nSet as you requested!\n"
 }
 
 send "exit\r"
