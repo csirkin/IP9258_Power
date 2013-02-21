@@ -15,15 +15,14 @@ if { [llength $argv] == 0 } {
 	exit 1
 }
 
-if {[regexp {[0-1][0-1][0-1][0-1]} $targetState]} {
-#	send_user $dev1\n
-#	set requestedState [concat $dev1 ' ' $dev2 " " $dev3 " " $dev4]
-#	send_user $requestedState\n
+if {[regexp {^([0-1])([0-1])([0-1])([0-1])$} $targetState -> dev1 dev2 dev3 dev4]} {
+	set requestedState [concat $dev1 " " $dev2 " " $dev3 " " $dev4]
+	send_user $requestedState\n
 	set correctCustom 1
 }
 
 if { $targetState != "up" && $targetState != "down" && $targetState != "check" && $targetState != "usual" && $correctCustom != 1 } {
-       send_user "Usage: power up|down|check|usual\n"
+       send_user "Usage: power up|down|check|usual|xxxx\n"
        exit 1
 }
 
@@ -100,11 +99,11 @@ if { $targetState == "usual" } {
 	send_user "\nWe've rounded up the usual suspects!\n"
 }
 
-# If the user has chosen to enter a custom state we'll assume it worked for now
+# If the user has chosen to enter a custom state we'll match the status
 if { $correctCustom == 1 } {
 	expect {
-		timeout { send_user "\n***Command timed out after sending custom power on command\n"; exit 1 }
-		"Power Status :"
+		timeout { send_user "\n***Power state does not match custom power on request\n"; exit 1 }
+		"Power Status : $requestedState"
 	}
 	send_user "\nSet as you requested!\n"
 }
