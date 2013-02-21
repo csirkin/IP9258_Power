@@ -1,6 +1,6 @@
 This is an expect script to operate the IP9258 network power switch from the command line over telnet.
 
-Script can be called to check status, power everything up, power everything down, turn on a commonly used set of devices or set your own custom configuration using 4 0s and 1s.
+Script can be called to check status, power everything up, power everything down, turn on a commonly used set of devices or set your own custom configuration using any combination of 4 0s or 1s.
 	
 	Usage: power up|down|check|usual|xxxx
 
